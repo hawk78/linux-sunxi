@@ -876,6 +876,7 @@ static int bma250_probe(struct i2c_client *client,
 {
 	int err = 0;
 	int tempvalue;
+	int tempvalue2;
 	struct bma250_data *data;
 
 	bma_dbg("bma250: probe\n");
@@ -888,9 +889,22 @@ static int bma250_probe(struct i2c_client *client,
 		err = -ENOMEM;
 		goto exit;
 	}
+	i2c_set_clientdata(client, data);
+
 	/* read chip id */
 	tempvalue = 0;
 	tempvalue = i2c_smbus_read_word_data(client, BMA250_CHIP_ID_REG);
+	if (tempvalue = -70)
+	{
+		printk(KERN_INFO "Bosch Sensortec Device not yet found,"
+				"i2c error %d \n", tempvalue);
+		client->addr=0x19;
+		tempvalue = i2c_smbus_read_word_data(client, BMA250_CHIP_ID_REG);
+		tempvalue = i2c_smbus_read_word_data(client, BMA250_CHIP_ID_REG);
+		tempvalue2 = client->addr;
+		printk(KERN_INFO "Bosch maybe found,"
+				"type %d addr %d \n", tempvalue, tempvalue2);
+	}
 
 	if ((tempvalue&0x00FF) == BMA250_CHIP_ID) {
 		printk(KERN_INFO "Bosch Sensortec Device detected!\n" \
@@ -898,6 +912,10 @@ static int bma250_probe(struct i2c_client *client,
 	} else if ((tempvalue&0x00FF) == BMA150_CHIP_ID) {
 		printk(KERN_INFO "Bosch Sensortec Device detected!\n" \
 				"BMA150 registered I2C driver!\n");
+	} else if ((tempvalue&0x00FF) == 0xf9) {
+		printk(KERN_INFO "Bosch Sensortec Device detected!\n" \
+				"BMA150 registered I2C driver!\n");
+
 	}
 	else {
 		printk(KERN_INFO "Bosch Sensortec Device not found, \
@@ -905,7 +923,6 @@ static int bma250_probe(struct i2c_client *client,
 		err = -1;
 		goto kfree_exit;
 	}
-	i2c_set_clientdata(client, data);
 	data->bma250_client = client;
 	mutex_init(&data->value_mutex);
 	mutex_init(&data->mode_mutex);
